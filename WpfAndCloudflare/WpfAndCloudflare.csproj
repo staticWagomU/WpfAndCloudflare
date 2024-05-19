@@ -6,4 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Resources\version.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\version.txt" />
+  </ItemGroup>
 </Project>
