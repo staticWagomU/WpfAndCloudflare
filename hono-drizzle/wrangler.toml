@@ -1,0 +1,22 @@
+name = "hono-drizzle"
+pages_build_output_dir = "./dist"
+
+# [vars]
+# MY_VAR = "my-variable"
+
+# [[kv_namespaces]]
+# binding = "MY_KV_NAMESPACE"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+[[r2_buckets]]
+binding = "MY_BUCKET"
+bucket_name = "wpf-and-cloudflare"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wpf-and-cloudflare"
+database_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+migrations_dir = "migrations"
+
+# [ai]
+# binding = "AI"
