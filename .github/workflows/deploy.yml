@@ -1,0 +1,55 @@
+name: Build and Upload on Tag
+
+on:
+  push:
+    tags:
+      - '*.*.*.*'
+
+jobs:
+  build-and-upload:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Get current datetime
+        id: get_datetime
+        run: echo "DATETIME=$(Get-Date -Format "yyyy-MM-ddThh:mm:ss")" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
+        
+      - name: Get tag name
+        id: get_tag_name
+        run: echo "TAG_NAME=$($Env:GITHUB_REF -replace 'refs/tags/','')" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
+        
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+          
+      - name: Build and publish
+        run: dotnet publish .\WpfAndCloudflare\WpfAndCloudflare.csproj -c Release -o .\dist
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+        
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+          
+      - name: Install Wrangler
+        run: pnpm add wrangler -g
+          
+      - name: Upload to Cloudflare R2
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.R2_API_TOKEN }}
+        run: wrangler r2 object put "wpf-and-cloudflare/${{ steps.get_tag_name.outputs.TAG_NAME }}/WpfAndCloudflare.exe" --file=dist/WpfAndCloudflare.exe
+
+      - name: Insert to Cloudflare D1
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.D1_API_TOKEN }}
+        run: wrangler d1 execute DB --remote --command "INSERT INTO Release(Version, Release_date) VALUES('${{ steps.get_tag_name.outputs.TAG_NAME }}', '${{ steps.get_datetime.outputs.DATETIME }}')"
